@@ -1,0 +1,10 @@
+Options -Indexes
+RewriteEngine On
+
+# Blok akses langsung ke folder uploads (hanya gambar yang boleh)
+RewriteRule ^assets/uploads/(.+)\.(php|php5|phtml)$ - [F,L]
+
+# Pastikan semua request ke root diarahkan ke index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^$ /index.php [L]
