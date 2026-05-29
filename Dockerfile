@@ -1,25 +1,29 @@
-FROM php:8.2-apache
+FROM php:8.2-fpm-alpine
 
-# Disable semua MPM dulu, lalu aktifkan hanya prefork
-RUN a2dismod mpm_event mpm_worker mpm_prefork 2>/dev/null || true && \
-    a2enmod mpm_prefork && \
-    docker-php-ext-install mysqli pdo pdo_mysql && \
-    a2enmod rewrite
+# Install nginx + ekstensi PHP
+RUN apk add --no-cache nginx && \
+    docker-php-ext-install mysqli pdo pdo_mysql
 
 # PHP config
 RUN cp /usr/local/etc/php/php.ini-production /usr/local/etc/php/php.ini && \
     sed -i 's/upload_max_filesize = 2M/upload_max_filesize = 10M/' /usr/local/etc/php/php.ini && \
     sed -i 's/post_max_size = 8M/post_max_size = 10M/' /usr/local/etc/php/php.ini
 
-# Apache: izinkan .htaccess
-RUN sed -i 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf
+# Nginx config
+RUN mkdir -p /run/nginx
+COPY docker/nginx.conf /etc/nginx/nginx.conf
 
 # Copy app
 COPY . /var/www/html/
 
 # Permissions untuk folder upload
 RUN mkdir -p /var/www/html/assets/uploads/products && \
-    chown -R www-data:www-data /var/www/html/assets/uploads && \
+    chown -R www-data:www-data /var/www/html && \
     chmod -R 775 /var/www/html/assets/uploads
 
+# Entrypoint
+COPY docker/start.sh /start.sh
+RUN chmod +x /start.sh
+
 EXPOSE 80
+CMD ["/start.sh"]
