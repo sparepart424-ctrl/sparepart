@@ -2,7 +2,8 @@ FROM php:8.2-apache
 
 # Install extensions
 RUN docker-php-ext-install mysqli pdo pdo_mysql && \
-    a2enmod rewrite
+    a2dismod mpm_event mpm_worker || true && \
+    a2enmod mpm_prefork rewrite
 
 # PHP config
 RUN echo "upload_max_filesize = 10M" >> /usr/local/etc/php/php.ini && \
